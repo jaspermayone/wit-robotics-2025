@@ -54,7 +54,7 @@ static int sse_client_index(const sse_client_t* client) {
     return (int)(client - g_sse_clients);
 }
 
-static const char* controller_state_text(p_state state) {
+const char* web_server_state_text(p_state state) {
     switch (state) {
         case active:
             return "ACTIVE";
@@ -66,28 +66,32 @@ static const char* controller_state_text(p_state state) {
     }
 }
 
-static void snapshot_status(int* left, int* right, int* weapon, p_state* state, bool* failsafe, uint32_t* age_ms,
-                            float* roll, float* pitch, float* yaw, bool* test_active, const char** test_motor,
-                            int* test_power, uint32_t* test_remaining_ms, uint8_t* temp_c, uint8_t* humidity) {
+void web_server_get_snapshot(web_server_snapshot_t* out) {
     const uint32_t now_ms = to_ms_since_boot(get_absolute_time());
     const IMUData imu = imu_get_data();
     web_motor_test_status_t test_status = {0};
 
     web_motor_test_snapshot(now_ms, &test_status);
 
-    *left = g_motors_ctrl->left_speed;
-    *right = g_motors_ctrl->right_speed;
-    *weapon = g_motors_ctrl->weapon_speed;
-    *state = g_motors_ctrl->state;
-    *failsafe = g_motors_ctrl->failsafe_triggered;
-    *age_ms = now_ms - g_motors_ctrl->last_command_time_ms;
-    *roll = imu.roll;
-    *pitch = imu.pitch;
-    *yaw = imu.yaw;
-    *test_active = test_status.active;
-    *test_motor = test_status.motor_name;
-    *test_power = test_status.power;
-    *test_remaining_ms = test_status.remaining_ms;
+    out->left = g_motors_ctrl->left_speed;
+    out->right = g_motors_ctrl->right_speed;
+    out->weapon = g_motors_ctrl->weapon_speed;
+    out->state = g_motors_ctrl->state;
+    out->failsafe = g_motors_ctrl->failsafe_triggered;
+    out->age_ms = now_ms - g_motors_ctrl->last_command_time_ms;
+    out->roll = imu.roll;
+    out->pitch = imu.pitch;
+    out->yaw = imu.yaw;
+    out->accel_x = imu.accel_x;
+    out->accel_y = imu.accel_y;
+    out->accel_z = imu.accel_z;
+    out->gyro_x = imu.gyro_x;
+    out->gyro_y = imu.gyro_y;
+    out->gyro_z = imu.gyro_z;
+    out->test_active = test_status.active;
+    out->test_motor = test_status.motor_name;
+    out->test_power = test_status.power;
+    out->test_remaining_ms = test_status.remaining_ms;
 
     // Poll DHT11 at most every 3 seconds
     if ((now_ms - g_dht11_last_read_ms) >= DHT11_POLL_INTERVAL_MS) {
@@ -97,8 +101,8 @@ static void snapshot_status(int* left, int* right, int* weapon, p_state* state, 
         }
         g_dht11_last_read_ms = now_ms;
     }
-    *temp_c = g_dht11_data.temperature;
-    *humidity = g_dht11_data.humidity;
+    out->temp_c = g_dht11_data.temperature;
+    out->humidity = g_dht11_data.humidity;
 }
 
 static int clamp_response_len(int len, int max_len) {
@@ -156,42 +160,27 @@ static int generate_sse_headers(char* buffer, int max_len) {
 }
 
 static int generate_sse_frame(char* buffer, int max_len) {
-    int left = 0;
-    int right = 0;
-    int weapon = 0;
-    p_state state = stopped;
-    bool failsafe = false;
-    uint32_t age_ms = 0;
-    float roll = 0.0f;
-    float pitch = 0.0f;
-    float yaw = 0.0f;
-    bool test_active = false;
-    const char* test_motor = "none";
-    int test_power = 0;
-    uint32_t test_remaining_ms = 0;
-    uint8_t temp_c = 0;
-    uint8_t humidity = 0;
+    web_server_snapshot_t snap = {0};
 
-    snapshot_status(&left, &right, &weapon, &state, &failsafe, &age_ms, &roll, &pitch, &yaw,
-                    &test_active, &test_motor, &test_power, &test_remaining_ms, &temp_c, &humidity);
+    web_server_get_snapshot(&snap);
 
     return snprintf(buffer, max_len,
                     "data: %s,%d,%d,%d,%d,%lu,%.1f,%.1f,%.1f,%d,%s,%d,%lu,%u,%u\n\n",
-                    controller_state_text(state),
-                    failsafe ? 1 : 0,
-                    left,
-                    right,
-                    weapon,
-                    (unsigned long)age_ms,
-                    roll,
-                    pitch,
-                    yaw,
-                    test_active ? 1 : 0,
-                    test_motor,
-                    test_power,
-                    (unsigned long)test_remaining_ms,
-                    temp_c,
-                    humidity);
+                    web_server_state_text(snap.state),
+                    snap.failsafe ? 1 : 0,
+                    snap.left,
+                    snap.right,
+                    snap.weapon,
+                    (unsigned long)snap.age_ms,
+                    snap.roll,
+                    snap.pitch,
+                    snap.yaw,
+                    snap.test_active ? 1 : 0,
+                    snap.test_motor,
+                    snap.test_power,
+                    (unsigned long)snap.test_remaining_ms,
+                    snap.temp_c,
+                    snap.humidity);
 }
 
 static int generate_404(char* buffer, int max_len) {
