@@ -3,7 +3,5 @@ mcap/*
 !mcap/.gitkeep
 !mcap/fake-match.mcap
 
-# Python tooling
-tools/.venv/
-tools/__pycache__/
-tools/**/__pycache__/
+# C++ tool build output
+tools/build/
