@@ -6,7 +6,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 dependencies = [
     "foxglove-sdk>=0.4.0",
-    "aiohttp>=3.9",
+    "aiohttp>=3.14.3",
     "mcap>=1.2",
 ]
 
