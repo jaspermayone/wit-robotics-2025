@@ -1,0 +1,417 @@
+{
+  "configById": {
+    "3D!orientation": {
+      "cameraState": {
+        "distance": 3,
+        "perspective": true,
+        "phi": 60,
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOffset": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "thetaOffset": 45,
+        "fovy": 45,
+        "near": 0.1,
+        "far": 100
+      },
+      "followMode": "follow-pose",
+      "followTf": "battlebot",
+      "fixedFrame": "world",
+      "scene": {
+        "backgroundColor": "#1a1a2e",
+        "enableStats": false,
+        "labelScaleFactor": 1
+      },
+      "transforms": {
+        "showLabel": true
+      },
+      "topics": {},
+      "layers": {},
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "synchronize": false,
+      "imageMode": {}
+    },
+    "Plot!motors": {
+      "title": "Motor Commands",
+      "isSynced": true,
+      "paths": [
+        {
+          "value": "/motors.left",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Left Motor",
+          "color": "#4fc3f7"
+        },
+        {
+          "value": "/motors.right",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Right Motor",
+          "color": "#81c784"
+        },
+        {
+          "value": "/motors.weapon",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Weapon",
+          "color": "#ef5350"
+        }
+      ],
+      "minYValue": -110,
+      "maxYValue": 110,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "sidebarDimension": 240,
+      "xAxisVal": "timestamp"
+    },
+    "Plot!imu_angles": {
+      "title": "IMU Orientation — Roll / Pitch / Yaw (degrees, from quaternion via .@rpy)",
+      "isSynced": true,
+      "paths": [
+        {
+          "value": "/imu.orientation.@rpy.roll.@degrees",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Roll",
+          "color": "#ff7043"
+        },
+        {
+          "value": "/imu.orientation.@rpy.pitch.@degrees",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Pitch",
+          "color": "#ab47bc"
+        },
+        {
+          "value": "/imu.orientation.@rpy.yaw.@degrees",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Yaw",
+          "color": "#26c6da"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "sidebarDimension": 240,
+      "xAxisVal": "timestamp"
+    },
+    "Plot!imu_accel": {
+      "title": "Linear Acceleration (m/s²)",
+      "isSynced": true,
+      "paths": [
+        {
+          "value": "/imu.linear_acceleration.x",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "X",
+          "color": "#ef5350"
+        },
+        {
+          "value": "/imu.linear_acceleration.y",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Y",
+          "color": "#66bb6a"
+        },
+        {
+          "value": "/imu.linear_acceleration.z",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Z",
+          "color": "#42a5f5"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "sidebarDimension": 240,
+      "xAxisVal": "timestamp",
+      "foxglovePanelTitle": "Accel"
+    },
+    "Plot!gyro": {
+      "title": "Angular Velocity (rad/s)",
+      "isSynced": true,
+      "paths": [
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/imu.angular_velocity.x",
+          "enabled": false,
+          "label": "X",
+          "color": "#ef5350"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/imu.angular_velocity.y",
+          "enabled": true,
+          "label": "Y",
+          "color": "#66bb6a"
+        },
+        {
+          "timestampMethod": "receiveTime",
+          "value": "/imu.angular_velocity.z",
+          "enabled": true,
+          "label": "Z",
+          "color": "#42a5f5"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "sidebarDimension": 240,
+      "xAxisVal": "timestamp",
+      "foxglovePanelTitle": "Vel"
+    },
+    "Plot!battery": {
+      "title": "Battery Voltage",
+      "isSynced": true,
+      "paths": [
+        {
+          "value": "/battery.voltage",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Pack Voltage (V)",
+          "color": "#ffa726"
+        },
+        {
+          "value": "/battery.cell_avg",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Cell Average (V)",
+          "color": "#ffee58"
+        }
+      ],
+      "minYValue": 9.5,
+      "maxYValue": 13,
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "sidebarDimension": 240,
+      "xAxisVal": "timestamp"
+    },
+    "Plot!thermal": {
+      "title": "Thermal",
+      "isSynced": true,
+      "paths": [
+        {
+          "value": "/thermal.temperature_c",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Temperature (°C)",
+          "color": "#ef5350"
+        },
+        {
+          "value": "/thermal.humidity",
+          "enabled": true,
+          "timestampMethod": "receiveTime",
+          "label": "Humidity (%)",
+          "color": "#42a5f5"
+        }
+      ],
+      "showXAxisLabels": true,
+      "showYAxisLabels": true,
+      "showLegend": true,
+      "legendDisplay": "floating",
+      "showPlotValuesInLegend": true,
+      "sidebarDimension": 240,
+      "xAxisVal": "timestamp",
+      "foxglovePanelTitle": "Temp"
+    },
+    "RawMessages!state": {
+      "topicPath": "/state",
+      "diffEnabled": false,
+      "diffMethod": "custom",
+      "diffTopicPath": "",
+      "showFullMessageForDiff": false,
+      "fontSize": 14,
+      "defaultExpanded": false
+    },
+    "Indicator!controller": {
+      "path": "/state.controller",
+      "style": "background",
+      "fallbackColor": "#444444",
+      "fallbackLabel": "UNKNOWN",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "ACTIVE",
+          "color": "#4caf50",
+          "label": "ACTIVE"
+        },
+        {
+          "operator": "=",
+          "rawValue": "INIT",
+          "color": "#ff9800",
+          "label": "INITIALIZING"
+        },
+        {
+          "operator": "=",
+          "rawValue": "STOPPED",
+          "color": "#f44336",
+          "label": "STOPPED"
+        }
+      ],
+      "fontSize": 36
+    },
+    "Indicator!failsafe": {
+      "path": "/state.failsafe",
+      "style": "background",
+      "fallbackColor": "#444444",
+      "fallbackLabel": "UNKNOWN",
+      "rules": [
+        {
+          "operator": "=",
+          "rawValue": "false",
+          "color": "#4caf50",
+          "label": "FAILSAFE: OK"
+        },
+        {
+          "operator": "=",
+          "rawValue": "true",
+          "color": "#f44336",
+          "label": "FAILSAFE TRIGGERED"
+        }
+      ],
+      "fontSize": 36
+    },
+    "Gauge!battery_pct": {
+      "path": "/battery.percent",
+      "minValue": 0,
+      "maxValue": 100,
+      "colorMode": "gradient",
+      "gradient": [
+        "#f44336",
+        "#4caf50"
+      ],
+      "reverse": false,
+      "style": "dial",
+      "colorMap": "red-yellow-green",
+      "reverseDirection": false
+    },
+    "Gauge!temp": {
+      "path": "/thermal.temperature_c",
+      "minValue": 20,
+      "maxValue": 60,
+      "colorMode": "gradient",
+      "gradient": [
+        "#4caf50",
+        "#f44336"
+      ],
+      "reverse": false,
+      "style": "dial",
+      "colorMap": "red-yellow-green",
+      "reverseDirection": false
+    },
+    "Publish!estop": {
+      "topicName": "/cmd/estop",
+      "datatype": "battlebot.Command",
+      "buttonText": "E-STOP TOGGLE",
+      "buttonTooltip": "BENCH ONLY — Toggle bot active/stopped state. NOT a real e-stop.",
+      "buttonColor": "#f44336",
+      "advancedView": false,
+      "value": "{\"action\": \"toggle\"}"
+    },
+    "Publish!test_stop": {
+      "topicName": "/cmd/test_stop",
+      "datatype": "battlebot.Command",
+      "buttonText": "STOP MOTOR TEST",
+      "buttonTooltip": "Stop any running motor test",
+      "buttonColor": "#ff9800",
+      "advancedView": false,
+      "value": "{\"action\": \"stop\"}"
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "direction": "row",
+    "first": {
+      "direction": "column",
+      "first": {
+        "direction": "row",
+        "first": "Indicator!controller",
+        "second": {
+          "direction": "row",
+          "first": "Indicator!failsafe",
+          "second": {
+            "direction": "row",
+            "first": "Gauge!battery_pct",
+            "second": "Gauge!temp"
+          }
+        }
+      },
+      "second": {
+        "direction": "row",
+        "first": "3D!orientation",
+        "second": {
+          "direction": "column",
+          "first": "Plot!motors",
+          "second": {
+            "direction": "column",
+            "first": "Plot!imu_angles",
+            "second": "Plot!battery"
+          }
+        },
+        "splitPercentage": 35
+      },
+      "splitPercentage": 10
+    },
+    "second": {
+      "direction": "column",
+      "first": {
+        "direction": "column",
+        "first": "Plot!imu_accel",
+        "second": "Plot!gyro"
+      },
+      "second": {
+        "direction": "column",
+        "first": "Plot!thermal",
+        "second": {
+          "direction": "column",
+          "first": "RawMessages!state",
+          "second": {
+            "direction": "row",
+            "first": "Publish!estop",
+            "second": "Publish!test_stop"
+          },
+          "splitPercentage": 60
+        }
+      }
+    },
+    "splitPercentage": 60
+  }
+}

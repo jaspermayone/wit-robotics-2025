@@ -1,0 +1,9 @@
+# MCAP recordings — landing zone, all contents ignored except tracked samples
+mcap/*
+!mcap/.gitkeep
+!mcap/fake-match.mcap
+
+# Python tooling
+tools/.venv/
+tools/__pycache__/
+tools/**/__pycache__/
