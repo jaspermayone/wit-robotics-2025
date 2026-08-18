@@ -8,7 +8,7 @@
 #include "config.h"
 #include "web_dashboard_page.h"
 #include "web_motor_test.h"
-#include "wifi_ap.h"
+#include "wifi_sta.h"
 #include "imu.h"
 #include "dht11.h"
 
@@ -612,7 +612,7 @@ bool web_server_init(motor_controller_t* motors) {
     btstack_run_loop_set_timer_handler(&g_sse_timer, sse_broadcast_timer);
     btstack_run_loop_set_timer(&g_sse_timer, WEB_SERVER_SSE_INTERVAL_MS);
     btstack_run_loop_add_timer(&g_sse_timer);
-    printf("Web server ready at http://%s/\n", wifi_ap_get_ip());
+    printf("Web server ready at http://%s/\n", wifi_sta_get_ip());
 
     return true;
 }

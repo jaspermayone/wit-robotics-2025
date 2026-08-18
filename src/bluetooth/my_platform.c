@@ -20,7 +20,7 @@
 #include "motor_controller.h" // Motor control
 #include "utility.h"
 #include "web_server.h"       // HTTP dashboard
-#include "wifi_ap.h"
+#include "wifi_sta.h"
 
 // Sanity check - Pico W requires custom platform mode
 #ifndef CONFIG_BLUEPAD32_PLATFORM_CUSTOM
@@ -154,8 +154,10 @@ static void my_platform_on_init_complete(void) {
     motor_controller_init(&motor_ctrl);
     motor_controller_set_state(&motor_ctrl, stopped); // Start in "off" state until controller is connected
 
-    // Initialize web server (Wi-Fi AP already started in main.c)
-    wifi_ap_init();
+    // Connect to Wi-Fi network
+    if (!wifi_sta_init()) {
+        printf("WARNING: Wi-Fi connection failed — dashboard unavailable\n");
+    }
 
     printf("web_server_init...\n");
     if (!web_server_init(&motor_ctrl)) {

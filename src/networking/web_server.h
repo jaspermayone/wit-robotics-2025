@@ -2,7 +2,7 @@
  * @file web_server.h
  * @brief Simple HTTP status-dashboard server.
  *
- * Wi-Fi AP must be initialized before calling @ref web_server_init.
+ * Wi-Fi must be connected before calling @ref web_server_init.
  */
 #ifndef WEB_SERVER_H
 #define WEB_SERVER_H

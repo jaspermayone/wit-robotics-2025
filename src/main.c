@@ -14,7 +14,7 @@
 #include "config.h"            // Central configuration
 #include "sdkconfig.h"         // Bluepad32 configuration
 #include "web_server.h"
-#include "wifi_ap.h"           // WiFi access point
+#include "wifi_sta.h"          // WiFi station (client)
 #include "hardware/imu.h"     // IMU sensor driver
 
 

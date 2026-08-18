@@ -26,7 +26,7 @@ add_executable(${PROJECT_NAME}
         src/main.c
         src/bluetooth/my_platform.c
         src/hardware/motor_controller.c
-        src/networking/wifi_ap.c
+        src/networking/wifi_sta.c
         src/networking/web_server.c
         src/networking/web_dashboard_page.c
         src/networking/web_motor_test.c

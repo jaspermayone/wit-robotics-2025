@@ -5,7 +5,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "secrets.h"  // Contains SECRET_WIFI_PASSWORD (gitignored)
+#include "secrets.h"  // Contains SECRET_WIFI_SSID and SECRET_WIFI_PASSWORD (gitignored)
 
 // =============================================================================
 // ROBOT IDENTITY
@@ -105,17 +105,12 @@ This is the standard RC servo/ESC protocol (typically 1000–2000 µs range). No
 #define BATTERY_ADC_RATIO       5.7f    // Voltage divider ratio
 
 // =============================================================================
-// Wi-Fi SETTINGS
+// Wi-Fi SETTINGS (Station / Client mode — joins an existing network)
 // =============================================================================
 
-#define WIFI_AP_SSID      "Monster Book of Monsters"
-#define WIFI_AP_PASSWORD  SECRET_WIFI_PASSWORD  // From secrets.h
-#define WIFI_AP_CHANNEL   11
-
-// AP IP Configuration
-#define WIFI_AP_IP        "192.168.4.1"
-#define WIFI_AP_NETMASK   "255.255.255.0"
-#define WIFI_AP_GATEWAY   "192.168.4.1"
+#define WIFI_SSID                SECRET_WIFI_SSID      // From secrets.h
+#define WIFI_PASSWORD            SECRET_WIFI_PASSWORD   // From secrets.h
+#define WIFI_CONNECT_TIMEOUT_MS  15000                  // 15 seconds to connect
 
 // =============================================================================
 // WEB SERVER SETTINGS
