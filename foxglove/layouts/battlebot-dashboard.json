@@ -342,6 +342,15 @@
       "advancedView": false,
       "value": "{\"action\": \"toggle\"}"
     },
+    "Publish!test_start": {
+      "topicName": "/cmd/test",
+      "datatype": "battlebot.Command",
+      "buttonText": "START MOTOR TEST",
+      "buttonTooltip": "BENCH ONLY — Start a one-shot motor test. Edit the motor, power, and duration first.",
+      "buttonColor": "#4caf50",
+      "advancedView": true,
+      "value": "{\"motor\": \"weapon\", \"power\": 35, \"duration\": 5}"
+    },
     "Publish!test_stop": {
       "topicName": "/cmd/test_stop",
       "datatype": "battlebot.Command",
@@ -406,7 +415,12 @@
           "second": {
             "direction": "row",
             "first": "Publish!estop",
-            "second": "Publish!test_stop"
+            "second": {
+              "direction": "row",
+              "first": "Publish!test_start",
+              "second": "Publish!test_stop"
+            },
+            "splitPercentage": 33
           },
           "splitPercentage": 60
         }
