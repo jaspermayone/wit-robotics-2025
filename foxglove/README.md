@@ -1,40 +1,40 @@
 # Foxglove Integration for Monster Book of Monsters
 
-Foxglove tooling for the Pico 2 W battlebot — live telemetry, post-match replay, and bench-testing controls.
+Foxglove support for the Pico 2 W battlebot — live telemetry, 3D orientation,
+and bench-testing controls.
+
+**The bot connects to Foxglove directly.** The firmware serves the Foxglove
+WebSocket protocol itself. There is no host-side bridge to start.
 
 ## What's Here
 
-- **`tools/`** — Python scripts (SSE bridge, fake SSE server, MCAP generator) managed with [uv](https://docs.astral.sh/uv/)
+- **`../src/networking/foxglove_ws.c`** — the Foxglove server in the firmware
 - **`layouts/`** — Foxglove layouts ready to import
-- **`mcap/`** — Landing zone for MCAP recordings (gitignored contents)
-- **`repo-review.md`** — Technical review of the battlebot firmware
-
-## Goals
-
-The battlebot already has a WiFi AP serving an SSE telemetry stream at 5 Hz. These tools layer Foxglove on top to unlock:
-
-1. **Live visualization** — real-time Foxglove panels during testing (no firmware changes needed)
-2. **Post-match replay** — MCAP recording for timeline-scrubbing after a match
-3. **Event markers** — annotate key moments (failsafe, e-stop, weapon events) on the timeline
-4. **Bench commands** — trigger e-stop and motor tests from the Foxglove UI (testing only)
+- **`tools/`** — the MCAP demo generator (C++ / CMake), for work without hardware
+- **`mcap/`** — landing zone for MCAP recordings (gitignored contents)
+- **`repo-review.md`** — technical review of the battlebot firmware
 
 ## Quick Start
 
+1. Power the bot and wait for it to join Wi-Fi. The serial console prints the
+   address:
+
+   ```
+   Foxglove ready. In Foxglove, open a connection to ws://192.168.1.42:8765
+   ```
+
+2. Put your laptop on the same network as the bot.
+3. Open [Foxglove](https://app.foxglove.dev). Choose **Open connection**, then
+   **Foxglove WebSocket**, and enter `ws://<bot-ip>:8765`.
+4. Import `layouts/battlebot-dashboard.json`.
+
+Without the hardware, generate a simulated match and open the file instead:
+
 ```bash
-# Terminal 1 — fake bot (for demos without the real hardware)
 cd tools
-uv run python fake_sse_server.py
-
-# Terminal 2 — bridge
-uv run python bridge.py --url http://localhost:7002/events
+cmake -S . -B build && cmake --build build
+./build/generate_fake_mcap    # writes ../mcap/fake-match.mcap
 ```
-
-Then open [Foxglove](https://app.foxglove.dev), connect to `ws://localhost:7001`, and import `layouts/battlebot-dashboard.json`.
-
-For the real bot:
-
-1. Connect your laptop to the bot's WiFi AP ("Monster Book of Monsters")
-2. `uv run python bridge.py` (defaults to `http://192.168.4.1/events`)
 
 See `tools/README.md` for full options.
 
@@ -42,65 +42,131 @@ See `tools/README.md` for full options.
 
 ```mermaid
 graph LR
-    A[Pico 2 W<br/>WiFi AP] -->|SSE @ 5Hz| B[bridge.py]
-    B -->|Foxglove WS| C[Foxglove App<br/>Live Panels]
-    B -->|MCAP| D[mcap/ landing zone]
-    D -->|Post-session| C
-    style B fill:#f9f,stroke:#333
-    style D fill:#ff9,stroke:#333
+    A[Pico 2 W<br/>foxglove_ws.c] -->|Foxglove WS @ 5Hz| B[Foxglove App<br/>Live Panels]
+    A -->|HTTP + SSE| C[Built-in dashboard]
+    D[generate_fake_mcap] -->|MCAP| E[mcap/ demo file]
+    E -->|Offline| B
+    style A fill:#9f9,stroke:#333
+    style E fill:#ff9,stroke:#333
 ```
 
-## Demo Data
+The bot runs two servers at the same time:
 
-A reference recording is committed at **`mcap/fake-match.mcap`** — open it in Foxglove with `layouts/battlebot-dashboard.json` to see every panel populated (including accel/gyro/battery, which the live SSE bridge can't produce today).
+| Port | Server | Purpose |
+|---|---|---|
+| 80 | HTTP + SSE | The built-in web dashboard |
+| 8765 | Foxglove WebSocket | Foxglove app connections |
 
-`tools/generate_fake_mcap.py` simulates a 2-minute match with realistic phase progression: init → weapon spinup → engagement → **big hit** → recovery → aggressive combat → **second hit** → final push → end.
+## Why the Firmware Speaks the Protocol
 
-```bash
-cd tools
-uv run python generate_fake_mcap.py                 # fresh run with random data
-uv run python generate_fake_mcap.py --seed 42       # reproducible (committed version uses this seed)
-```
+The Foxglove C++ SDK cannot run on the Pico 2 W. Its core is a prebuilt Rust
+library that needs a full operating system. So `foxglove_ws.c` implements the
+wire protocol (subprotocol `foxglove.sdk.v1`) on top of lwIP raw TCP.
 
-### Why do accel/gyro show up in `fake-match.mcap` but NOT in live bridge recordings?
-
-The bot's SSE stream (`web_server.c:generate_sse_frame`) only includes `roll`, `pitch`, `yaw`, `temp_c`, `humidity`, and motor speeds — not accel, gyro, or battery voltage. The bridge emits zeros for those fields because it has nothing to populate them with. The generator bypasses SSE entirely and simulates a full match including accel/gyro data, which is why its MCAP output is richer. Adding those fields to the SSE format is on the roadmap below.
+Messages use the `json` encoding with `jsonschema` schemas. That removes the
+need for a protobuf runtime on the microcontroller. Foxglove treats a
+JSON-encoded `foxglove.FrameTransform` the same as a protobuf one, so the 3D
+panel works.
 
 ## Schemas
 
-The bridge and generator publish the same schemas so layouts work with either source. Standard Foxglove schemas are used where they fit; custom `battlebot.*` schemas cover the rest.
+| Topic | Schema | Rate | Notes |
+|---|---|---|---|
+| `/tf` | `foxglove.FrameTransform` | 5 Hz | **Standard.** Drives the 3D panel. Quaternion computed from IMU roll/pitch/yaw. |
+| `/motors` | `battlebot.Motors` | 5 Hz | `{left, right, weapon}` — no standard schema for motor commands. |
+| `/imu` | `battlebot.Imu` | 5 Hz | Composite matching `sensor_msgs/Imu`: orientation, angular_velocity (rad/s), linear_acceleration (m/s²). |
+| `/state` | `battlebot.State` | 1 Hz | `{controller, failsafe, command_age_ms}` — drives the Indicator panels. |
+| `/thermal` | `battlebot.Thermal` | 1/3 Hz | `{temperature_c, humidity}`. The DHT11 is slow, so this rate is low. |
 
-| Topic | Schema | Notes |
+`battlebot.Battery` and `battlebot.Event` exist in the demo generator only. The
+bot has no battery sensor wired, and event markers are still on the roadmap.
+
+**Plotting Euler angles**: the layout uses Foxglove's built-in `.@rpy` function
+to read roll/pitch/yaw back out of the quaternion — for example
+`/imu.orientation.@rpy.yaw.@degrees`.
+
+## Timestamps
+
+The Pico has no real-time clock. Message log times are **nanoseconds since bot
+boot**, not Unix time. The timeline in Foxglove therefore starts near zero.
+Durations and relative times are correct.
+
+## Limits
+
+- **Two clients at a time.** Each client needs a receive buffer. A third
+  connection gets `503 Service Unavailable`. Change
+  `FOXGLOVE_WS_MAX_CLIENTS` in `src/config/config.h` if you need more.
+- **No MCAP recording on the bot yet.** The SD card driver (`sd_storage.c`) is
+  implemented but not wired into telemetry. See the roadmap.
+- **Client frames must fit in 1 KB.** A larger frame drops the connection.
+  Bench commands are far smaller than that.
+
+## Demo Data
+
+A reference recording is committed at **`mcap/fake-match.mcap`**. Open it in
+Foxglove with `layouts/battlebot-dashboard.json` to see every panel populated,
+including battery and match events, which the live bot does not publish.
+
+`tools/src/generate_fake_mcap.cpp` simulates a 2-minute match with realistic
+phase progression: init → weapon spinup → engagement → **big hit** → recovery →
+aggressive combat → **second hit** → final push → end.
+
+```bash
+cd tools
+./build/generate_fake_mcap                 # fresh run with random data
+./build/generate_fake_mcap --seed 42       # repeatable (the committed file uses this seed)
+```
+
+## Bench Commands
+
+The layout has Publish panel buttons. The bot handles them in
+`foxglove_ws.c`, with no HTTP hop:
+
+| Topic | Payload | Action |
 |---|---|---|
-| `/tf` | `foxglove.FrameTransform` | **Standard.** Drives the 3D panel. Quaternion computed from IMU roll/pitch/yaw. |
-| `/motors` | `battlebot.Motors` | Custom. `{left, right, weapon}` — no standard for motor commands. |
-| `/imu` | `battlebot.Imu` | Custom composite matching `sensor_msgs/Imu`: orientation (Quaternion), angular_velocity (Vector3), linear_acceleration (Vector3). |
-| `/battery` | `battlebot.Battery` | Custom. Not populated by the bridge (SSE doesn't include voltage yet). |
-| `/thermal` | `battlebot.Thermal` | Custom. `{temperature_c, humidity}`. |
-| `/state` | `battlebot.State` | Custom. `{controller, failsafe, command_age_ms}` — drives the Indicator panels. |
-| `/events/match` | `battlebot.Event` | Custom. Generator-only for now. |
+| `/cmd/estop` | `{}` | Toggle the active/stopped state |
+| `/cmd/test` | `{"motor":"weapon","power":35,"duration":5}` | Run a one-shot motor test |
+| `/cmd/test_stop` | `{}` | Stop the motor test |
 
-**Plotting Euler angles**: The layout uses Foxglove's built-in `.@rpy` function to extract roll/pitch/yaw from the quaternion — e.g. `/imu.orientation.@rpy.yaw.@degrees`.
+`duration` is in seconds. Omit it, or send `0`, to hold until you stop the test.
+`motor` is `left`, `right`, or `weapon`.
+
+The layout ships with buttons for all three topics: `/cmd/estop`,
+`/cmd/test`, and `/cmd/test_stop`. Open the advanced view on the "START MOTOR
+TEST" button to edit the motor, power, and duration before you publish.
 
 ## Roadmap
 
 ### Done
-- **SSE-to-Foxglove bridge** — Python script using foxglove-sdk multi-sink (MCAP + WebSocket simultaneously)
+- **On-device Foxglove server** — the bot serves `ws://<bot-ip>:8765` itself
 - **Standard FrameTransform for 3D** — live 3D view of bot orientation
-- **Foxglove layout** — motor plots, IMU (with `.@rpy` Euler extraction), battery, thermal, state indicators, Publish buttons
-- **Bench commands** — `/cmd/estop`, `/cmd/test`, `/cmd/test_stop` topics forwarded to bot HTTP API
+- **Accel and gyro on the live stream** — the Foxglove path publishes the full
+  IMU record, which the CSV over SSE cannot carry
+- **Foxglove layout** — motor plots, IMU (with `.@rpy` Euler extraction),
+  thermal, state indicators, Publish buttons
+- **Bench commands** — `/cmd/estop`, `/cmd/test`, `/cmd/test_stop` handled on
+  the bot
 
 ### Next
-- **Extend SSE with accel, gyro, battery voltage** — the bot reads these but doesn't broadcast them. Adding them to `web_server.c:generate_sse_frame()` would make the accel/gyro/battery plots light up during live sessions (currently populated only by the generator).
-- **MCAP-to-SD firmware work** — hook the existing `sd_storage.c` driver into the SSE telemetry pipeline so the bot records its own MCAP files on-device. The SD card driver is already implemented but `sd_card_init()` is never called.
-- **Event markers** — emit `battlebot.Event` messages on a `/events/match` channel for key match moments. `tools/generate_fake_mcap.py` demonstrates the pattern.
+- **Battery voltage** — `PIN_BATTERY_ADC` is assigned but no sensor is wired.
+  Once it is, add a `/battery` channel.
+- **MCAP-to-SD firmware work** — hook `sd_storage.c` into the telemetry
+  pipeline so the bot records its own MCAP files. The driver is implemented but
+  `sd_card_init()` is never called.
+- **Event markers** — publish `battlebot.Event` on `/events/match` for key match
+  moments. `tools/src/generate_fake_mcap.cpp` shows the pattern.
 
 ## Safety
 
-**The Publish panel buttons in the layout are for BENCH TESTING ONLY.** Do not rely on them as a real e-stop. Always wear safety goggles and have a physical e-stop ready when working with high-amp systems. The WiFi → WebSocket → Python → HTTP chain adds latency and has multiple failure points — it is not safety-critical.
+**The Publish panel buttons are for BENCH TESTING ONLY.** Do not use them as a
+real e-stop. Always wear safety goggles and keep a physical e-stop ready when
+you work with high-amp systems.
+
+The direct connection removes the bridge hop, but Wi-Fi is still not
+safety-critical. Packets can be lost or delayed.
 
 ## Key Links
 
-- [Foxglove SDK](https://github.com/foxglove/foxglove-sdk)
+- [Foxglove WebSocket protocol](https://github.com/foxglove/ws-protocol)
 - [Foxglove docs](https://docs.foxglove.dev)
 - [MCAP spec](https://mcap.dev)
