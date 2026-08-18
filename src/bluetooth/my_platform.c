@@ -20,6 +20,7 @@
 #include "motor_controller.h" // Motor control
 #include "utility.h"
 #include "web_server.h"       // HTTP dashboard
+#include "foxglove_ws.h"      // Foxglove WebSocket server
 #include "wifi_sta.h"
 
 // Sanity check - Pico W requires custom platform mode
@@ -163,6 +164,13 @@ static void my_platform_on_init_complete(void) {
     if (!web_server_init(&motor_ctrl)) {
         printf("FATAL: Failed to initialize web server!\n");
         return;
+    }
+
+    // The Foxglove server reads telemetry through web_server_get_snapshot, so
+    // it must start after the web server. A failure here is not fatal: the
+    // dashboard and the SSE stream still work.
+    if (!foxglove_ws_init(&motor_ctrl)) {
+        printf("WARNING: Foxglove WebSocket server unavailable\n");
     }
 
     printf("\n");

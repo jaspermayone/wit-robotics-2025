@@ -30,6 +30,7 @@ add_executable(${PROJECT_NAME}
         src/networking/web_server.c
         src/networking/web_dashboard_page.c
         src/networking/web_motor_test.c
+        src/networking/foxglove_ws.c
         src/hardware/motor_pwm_control.c
         src/hardware/motor_omni.c
         src/hardware/motor_bi.c

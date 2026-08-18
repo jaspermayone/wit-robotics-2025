@@ -122,6 +122,15 @@ This is the standard RC servo/ESC protocol (typically 1000–2000 µs range). No
 #define WEB_SERVER_SSE_STALL_TIMEOUT_MS 3000 // drop SSE clients that stay backpressured for this long
 
 // =============================================================================
+// FOXGLOVE WEBSOCKET SETTINGS
+// =============================================================================
+
+#define FOXGLOVE_WS_PORT            8765    // the port Foxglove connects to (ws://<bot-ip>:8765)
+#define FOXGLOVE_WS_MAX_CLIENTS     2       // each client costs an RX buffer, so keep this small
+#define FOXGLOVE_WS_INTERVAL_MS     200     // telemetry broadcast interval, same rate as the SSE stream
+#define FOXGLOVE_WS_STALL_TIMEOUT_MS 3000   // drop clients that stay backpressured for this long
+
+// =============================================================================
 // CONTROLLER MAPPING
 // =============================================================================
 
